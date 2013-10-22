@@ -7,8 +7,7 @@
 // opts.id is the HTML document element ID to append the program's
 // output to. If non is provided ouput is sent to the terminal. 
 // opts.quiet is used to silence console output. If it is true
-// nothing will be written to the console even if opts is not
-// specified.
+// nothing will be written to the console or added to the DOM
 // opts.cb is a function called at the end of execution.
 function BF(code, opts) {
 	opts = opts || {};
@@ -45,15 +44,16 @@ function BF(code, opts) {
 				i = loop_start_indices[loop_start_indices.length-1];
 	}
 
-	if (typeof opts.id    === "undefined") {
-		if (typeof opts.quiet === "undefined" || !opts.quiet)
-			console.log(std_out);
-	}
-	else {
-		var div = document.createElement("div");
-		div.setAttribute("class", "bfjs");
-		div.appendChild(document.createTextNode(std_out));
-		var id = document.getElementById(opts.id).appendChild(div);
+	if (typeof opts.quiet === "undefined" || !opts.quiet) {
+		if (typeof opts.id    === "undefined") {
+				console.log(std_out);
+		}
+		else {
+			var div = document.createElement("div");
+			div.setAttribute("class", "bfjs");
+			div.appendChild(document.createTextNode(std_out));
+			var id = document.getElementById(opts.id).appendChild(div);
+		}
 	}
 
 	if (typeof opts.cb !== "undefined")
