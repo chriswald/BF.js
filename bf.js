@@ -9,6 +9,7 @@
 // opts.quiet is used to silence console output. If it is true
 // nothing will be written to the console even if opts is not
 // specified.
+// opts.cb is a function called at the end of execution.
 function BF(code, opts) {
 	opts = opts || {};
 	var mem_size = opts.memory || 30000;
@@ -55,5 +56,8 @@ function BF(code, opts) {
 		var id = document.getElementById(opts.id).appendChild(div);
 	}
 
-	return std_out;
+	if (typeof opts.cb !== "undefined")
+		opts.cb(std_out);
+	else
+		return std_out;
 }
