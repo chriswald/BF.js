@@ -45,7 +45,7 @@ function BF_Interpreter(code, opts) {
 	}
 
 	if (typeof opts.quiet === "undefined" || !opts.quiet) {
-		if (typeof opts.id    === "undefined") {
+		if (typeof opts.id === "undefined") {
 				console.log(stdout);
 		}
 		else {
@@ -116,8 +116,12 @@ function BF_Scripter(code, opts) {
 			var depth = 1;
 			var k;
 			for (var k = i+1; k < code.length && depth !== 0; k ++) {
-				if (code[k] === "[") depth ++;
-				if (code[k] === "]") depth --;
+				if (code[k] === "[") {
+					depth ++;
+					Scripter.loop_start_indices.push(k);
+				}
+				if (code[k] === "]")
+					depth --;
 			}
 			if (depth !== 0) {
 				Scripter.loop = code.substring(i);
@@ -132,7 +136,7 @@ function BF_Scripter(code, opts) {
 	}
 
 	if (typeof opts.quiet === "undefined" || !opts.quiet) {
-		if (typeof opts.id    === "undefined") {
+		if (typeof opts.id === "undefined") {
 				console.log(Scripter.stdout);
 		}
 		else {
