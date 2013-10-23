@@ -6,7 +6,8 @@
 		<textarea id="code" placeholder="BrainF*** code" cols="50" rows="10">++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>.</textarea>
 		<textarea id="stdin" placeholder="Standard Input" cols="50" rows="10"></textarea>
 		<br/>
-		<button type="button" onclick="BF(document.getElementById('code').value, {id: 'body', stdin: document.getElementById('stdin').value})">Submit</button>
+		<button type="button" onclick="BF_Interpreter(document.getElementById('code').value, {id: 'body', stdin: document.getElementById('stdin').value})">Submit to interpreter</button>
+		<button type="button" onclick="BF_Scripter(document.getElementById('code').value, {id: 'body', stdin: document.getElementById('stdin').value})">Submit to scripter</button>
 		<h2>Output</h2>
 	</body>
 </html>
