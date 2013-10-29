@@ -152,3 +152,12 @@ function BF_Scripter(code, opts) {
 	else
 		return Scripter.stdout;
 }
+
+function resetScripter() {
+	Scripter = {memory: [], mem_ptr: 0, 
+				in_loop: false,
+				loop: "", loop_start_indices: [],
+				stdin: "", stdout: "",
+				stdin_ptr: 0,
+				initialized: false}
+}
