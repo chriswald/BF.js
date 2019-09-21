@@ -5,7 +5,7 @@
 // default is 30000 * 30000.toString(2).length / 8 bytes.
 // opts.stdin is a string of program input. The default is "".
 // opts.id is the HTML document element ID to append the program's
-// output to. If non is provided ouput is sent to the terminal. 
+// output to. If none is provided ouput is sent to the terminal. 
 // opts.quiet is used to silence console output. If it is true
 // nothing will be written to the console or added to the DOM
 // opts.cb is a function called at the end of execution.
