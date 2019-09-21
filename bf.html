@@ -1,14 +1,34 @@
 <html>
 	<head>
-		<script src="bf.js"></script>
+		<script>var exports = {};</script>
+		<script src="out/bf.js"></script>
+		<script>
+			function Interpret()
+			{
+				var code = document.getElementById("code").value;
+				var stdin = document.getElementById("stdin").value;
+				var outputElem = document.getElementById("output");
+
+				var options = new BFInterpreterOptions();
+				options.StdIn = stdin;
+				options.OutputElement = outputElem;
+
+				var interpreter = new BFInterpreter(code, options);
+				interpreter.Interpret();
+			}
+		</script>
 	</head>
-	<body id="body">
+	<body>
 		<textarea id="code" placeholder="BrainF*** code" cols="50" rows="10">++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>.</textarea>
 		<textarea id="stdin" placeholder="Standard Input" cols="50" rows="10"></textarea>
 		<br/>
-		<button type="button" onclick="BF_Interpreter(document.getElementById('code').value, {id: 'body', stdin: document.getElementById('stdin').value})">Submit to interpreter</button>
-		<button type="button" onclick="BF_Scripter(document.getElementById('code').value, {id: 'body', stdin: document.getElementById('stdin').value})">Submit to scripter</button>
-		<button type="button" onclick="resetScripter()">Reset Script Environment</button>
+		<button
+			type="button"
+			onclick="Interpret();"
+		>
+			Submit to interpreter
+		</button>
 		<h2>Output</h2>
+		<div id="output"></div>
 	</body>
 </html>
