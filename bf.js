@@ -1,3 +1,9 @@
+// THIS FILE IS DEPRECATED
+// IT IS RETAINED FOR FUTURE REFERENCE BUT IS NO LONGER MAINTAINED
+
+
+
+
 // Interprets code written in BrainF***
 // code is the BrainF*** to interpret.
 // opts is an object containing function options.
