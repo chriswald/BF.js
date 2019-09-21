@@ -39,13 +39,6 @@ export class BFInterpreter
     private code: string;
     private options: BFInterpreterOptions;
 
-    private memoryPointer: number = 0;
-    private memory: Array<number>;
-
-    private stdInPointer: number = 0;
-
-    private loopStartIndices: Array<number> = new Array<number>();
-
     /**
      * Constructor. With no options object specified, use the default
      * configuration.
@@ -62,8 +55,6 @@ export class BFInterpreter
     {
         this.code = code;
         this.options = options || new BFInterpreterOptions();
-
-        this.InitializeMemory();
     }
 
     /**
@@ -71,7 +62,8 @@ export class BFInterpreter
      */
     public Interpret(): string
     {
-        let stdOut: string = this.InterpretInternal(this.code);
+        let state: BFInterpreterState = new BFInterpreterState(this.options);
+        let stdOut: string = this.InterpretInternal(this.code, state);
 
         this.WriteOutput(stdOut);
         this.OnComplete(stdOut);
@@ -81,8 +73,9 @@ export class BFInterpreter
     /**
      * Interpret the script and return its output
      * @param code The script code to execute
+     * @param state The interpreter state
      */
-    private InterpretInternal(code: string): string
+    private InterpretInternal(code: string, state: BFInterpreterState): string
     {
         let stdOut: string = "";
 
@@ -93,34 +86,34 @@ export class BFInterpreter
             switch (token)
             {
                 case ">": 
-                    this.MoveMemoryPointer(1); 
+                    state.MoveMemoryPointer(1); 
                     break;
                 case "<":
-                    this.MoveMemoryPointer(-1);
+                    state.MoveMemoryPointer(-1);
                     break;
                 case "+":
-                    this.IncrementMemoryLocation(1);
+                    state.IncrementMemoryLocation(1);
                     break;
                 case "-":
-                    this.IncrementMemoryLocation(-1);
+                        state.IncrementMemoryLocation(-1);
                     break;
                 case ".":
-                    stdOut += this.GetCharForStdOut();
+                    stdOut += state.GetCharForStdOut();
                     break;
                 case ",":
-                    this.ReadCharFromStdIn();
+                        state.ReadCharFromStdIn(this.options.StdIn);
                     break;
                 case "[":
-                    this.loopStartIndices.push(i);
+                    state.BeginNewLoop(i);
                     break;
                 case "]":
-                    if (this.IsMemoryLocationZero())
+                    if (state.IsMemoryLocationZero())
                     {
-                        this.loopStartIndices.pop();
+                        state.EndLoop();
                     }
                     else
                     {
-                        i = this.PeekLoopStartIndices();
+                        i = state.PeekLoopStartIndices();
                     }
                     break;
                 default:
@@ -131,96 +124,6 @@ export class BFInterpreter
         }
 
         return stdOut;
-    }
-
-    /**
-     * Move the memory pointer to a new location
-     * @param forward The number of words to move the memory pointer forward
-     */
-    private MoveMemoryPointer(forward: number)
-    {
-        this.memoryPointer += forward;
-
-        if (this.memoryPointer < 0)
-        {
-            throw new Error(
-                "Memory pointer cannot be less than 0.\n" +
-                `memoryPointer: ${this.memoryPointer}\n` +
-                `stdInPointer: ${this.stdInPointer}\n` +
-                `Memory Words: ${this.options.MemoryWords}`
-            );
-        }
-        else if (this.memoryPointer > this.options.MemoryWords)
-        {
-            throw new Error(
-                `Memory pointer cannot be greater than ${this.options.MemoryWords - 1}.\n` +
-                `memoryPointer: ${this.memoryPointer}\n` +
-                `stdInPointer: ${this.stdInPointer}\n` +
-                `Memory Words: ${this.options.MemoryWords}`
-            );
-        }
-    }
-
-    /**
-     * Increment (or decrement) the current memory location
-     * @param amount The amount (positive or negative) to increment
-     * the current memory location by.
-     */
-    private IncrementMemoryLocation(amount: number)
-    {
-        this.memory[this.memoryPointer] += amount;
-    }
-
-    /**
-     * Initialize the memory space to all zeros
-     */
-    private InitializeMemory(): void
-    {
-        this.memory = new Array<number>(this.options.MemoryWords);
-        this.memory.fill(0);
-    }
-
-    /**
-     * Read the next character from the standard input and store it
-     * to the current memory location
-     */
-    private ReadCharFromStdIn(): void
-    {
-        let charCode: number = this.options.StdIn.charCodeAt(this.stdInPointer);
-        this.stdInPointer ++;
-
-        if (charCode === NaN)
-        {
-            charCode = 0;
-        }
-
-        this.memory[this.memoryPointer] = charCode;
-    }
-
-    /**
-     * Read the value of the current memory location and covert it to
-     * a character to be appended to the standard output.
-     */
-    private GetCharForStdOut(): string
-    {
-        return String.fromCharCode(this.memory[this.memoryPointer]);
-    }
-
-    /**
-     * Check if the memory location currently being pointed at is
-     * zero.
-     */
-    private IsMemoryLocationZero(): boolean
-    {
-        return this.memory[this.memoryPointer] === 0;
-    }
-
-    /**
-     * Return the loop start index on the top of the stack
-     */
-    private PeekLoopStartIndices(): number
-    {
-        return this.loopStartIndices[this.loopStartIndices.length - 1];
     }
 
     /**
@@ -256,5 +159,129 @@ export class BFInterpreter
         {
             this.options.CompleteCallback(stdOut);
         }
+    }
+}
+
+class BFInterpreterState
+{
+    public memoryPointer: number = 0;
+    public memory: Array<number>;
+
+    public stdInPointer: number = 0;
+
+    public loopStartIndices: Array<number> = new Array<number>();
+
+    public constructor(options: BFInterpreterOptions)
+    {
+        this.InitializeMemory(options.MemoryWords);
+    }
+
+    /**
+     * Initialize the memory space to all zeros
+     * @param memoryWords The size of the memory to initialize
+     */
+    private InitializeMemory(memoryWords: number): void
+    {
+        this.memory = new Array<number>(memoryWords);
+        this.memory.fill(0);
+    }
+
+    /**
+     * Move the memory pointer to a new location
+     * @param forward The number of words to move the memory pointer forward
+     */
+    public MoveMemoryPointer(forward: number)
+    {
+        this.memoryPointer += forward;
+
+        if (this.memoryPointer < 0)
+        {
+            throw new Error(
+                "Memory pointer cannot be less than 0.\n" +
+                `memoryPointer: ${this.memoryPointer}\n` +
+                `stdInPointer: ${this.stdInPointer}\n` +
+                `Memory Words: ${this.memory.length}`
+            );
+        }
+        else if (this.memoryPointer > this.memory.length)
+        {
+            throw new Error(
+                `Memory pointer cannot be greater than ${this.memory.length - 1}.\n` +
+                `memoryPointer: ${this.memoryPointer}\n` +
+                `stdInPointer: ${this.stdInPointer}\n` +
+                `Memory Words: ${this.memory.length}`
+            );
+        }
+    }
+
+    /**
+     * Increment (or decrement) the current memory location
+     * @param amount The amount (positive or negative) to increment
+     * the current memory location by.
+     */
+    public IncrementMemoryLocation(amount: number)
+    {
+        this.memory[this.memoryPointer] += amount;
+    }
+
+    /**
+     * Read the next character from the standard input and store it
+     * to the current memory location
+     * @param stdIn The standard input
+     */
+    public ReadCharFromStdIn(stdIn: string): void
+    {
+        let charCode: number = stdIn.charCodeAt(this.stdInPointer);
+        this.stdInPointer ++;
+
+        if (charCode === NaN)
+        {
+            charCode = 0;
+        }
+
+        this.memory[this.memoryPointer] = charCode;
+    }
+
+    /**
+     * Read the value of the current memory location and covert it to
+     * a character to be appended to the standard output.
+     */
+    public GetCharForStdOut(): string
+    {
+        return String.fromCharCode(this.memory[this.memoryPointer]);
+    }
+
+    /**
+     * Check if the memory location currently being pointed at is
+     * zero.
+     */
+    public IsMemoryLocationZero(): boolean
+    {
+        return this.memory[this.memoryPointer] === 0;
+    }
+
+    /**
+     * Store the start index of a new loop
+     * @param scriptIndex The loop's starting index in the script
+     */
+    public BeginNewLoop(scriptIndex: number): void
+    {
+        this.loopStartIndices.push(scriptIndex);
+    }
+
+    /**
+     * Finish a loop
+     */
+    public EndLoop(): void
+    {
+        this.loopStartIndices.pop();
+    }
+
+    /**
+     * Return the loop start index on the top of the stack
+     */
+    public PeekLoopStartIndices(): number
+    {
+        return this.loopStartIndices[this.loopStartIndices.length - 1];
     }
 }
